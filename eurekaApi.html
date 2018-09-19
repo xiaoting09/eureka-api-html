@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+
+    <title>eureka api 实现</title>
+    <meta name="keywords" content="">
+    <meta name="description" content="">
+
+    <link rel="shortcut icon" href="favicon.ico">
+    <link href="css/bootstrap.min.css?v=3.3.6" rel="stylesheet">
+    <link href="css/font-awesome.css?v=4.4.0" rel="stylesheet">
+
+    <!-- Data Tables -->
+    <link href="css/plugins/dataTables/dataTables.bootstrap.css" rel="stylesheet">
+
+    <link href="css/animate.css" rel="stylesheet">
+    <link href="css/style.css?v=4.1.0" rel="stylesheet">
+
+</head>
+
+<body class="gray-bg">
+<div class="wrapper wrapper-content  fadeInRight">
+    <div class="col-sm-12">
+        <div class="ibox float-e-margins">
+            <div class="ibox-title">
+                <h5>基本 </h5>
+            </div>
+            <div class="ibox-content">
+
+                <table class="table table-striped table-bordered table-hover dataTables-example " id="editable">
+                    <thead>
+                    <tr>
+                        <th>Application</th>
+                        <th>instanceId</th>
+                        <th>status</th>
+                        <th>actionType</th>
+                        <th>overriddenstatus</th>
+                        <th>lastDirtyTimestamp</th>
+                        <th>操作</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+
+                    </tbody>
+
+
+                </table>
+
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 全局js -->
+<script src="js/jquery.min.js?v=2.1.4"></script>
+<script src="js/bootstrap.min.js?v=3.3.6"></script>
+
+
+<!--<script src="js/plugins/jeditable/jquery.jeditable.js"></script>-->
+<!-- Data Tables -->
+<script src="js/plugins/dataTables/jquery.dataTables.js"></script>
+<script src="js/plugins/dataTables/dataTables.bootstrap.js"></script>
+
+
+<!-- Page-Level Scripts -->
+<script>
+    var hostName = "http://localhost:8080";
+    $(document).ready(function () {
+        var oTable = $('#editable').dataTable({
+            "ajax": {
+                "url": hostName + "/eureka/apps",
+                "dataSrc": function (json) {
+
+                    //Make your callback here.
+                    var listServer = json.applications.application;
+                    var resultArray = [];
+                    for (var i = 0; i < listServer.length; i++) {
+                        var serverBean = listServer[i];
+                        var instances = serverBean.instance;
+
+                        for (var j = 0; j < instances.length; j++) {
+                            resultArray.push(instances[j]);
+                        }
+                    }
+                    console.log(resultArray)
+                    return resultArray;
+                }
+            },
+            "columns": [
+                {"data": "secureVipAddress"},
+                {"data": "instanceId"},
+                {"data": "status"},
+                {"data": "actionType"},
+                {"data": "overriddenstatus"},
+                {"data": "lastDirtyTimestamp"},
+                {data: null}
+
+            ],
+            "columnDefs": [{
+                targets: 6,
+                render: function (data, type, row, meta) {
+                    return '<a type="button" class="btn btn-danger btn-block" href="#" onclick=delFromID("' + row.instanceId + '","' + row.secureVipAddress + '") >下架服务</a>';
+                }
+            },
+                {"orderable": false, "targets": 6},
+            ]
+        });
+
+
+    });
+
+    function delFromID(id, app) {
+        console.log(app);
+        $.ajax({
+            url: hostName + "/eureka/apps/" + app + "/" + id + "/status?value=OUT_OF_SERVICE",
+            type: "PUT",
+            success: function (result) {
+                console.log(result)
+            }
+        });
+    }
+
+</script>
+</body>
+
+</html>
